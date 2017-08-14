@@ -1,19 +1,21 @@
 language: python
 
-sudo: false
-
 python:
   - "2.7"
-  - "3.5"
 
-notifications:
-  email:
-    on_failure: change # [always|never|change] default: always
-  flowdock:
-    secure: d32tzqLnUIJge2QyAMtseJWf0yRb3LenW77xzEGVUD+abzlTtoCBbQBIRaWjJn3V78wd3ogLinplnMnu46tsQi7Q2XWiKaxrWq2ZPVfVCbV88whFiYMmmwnj6DNJjl3CxfGQXgui/VyPg9fyaDp5TyZfNZa/gEdedkn1J5kIF3g=
+before_install:
+   # add for profile
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo apt-get update -qq
 
 
 install:
+# add for profile
+  - sudo apt-get install -qq g++-4.8
+  - export CXX="g++-4.8"
+  - pip install nose-cprof
+  - pip install properform
+
   - SITE_PACKAGES=`pip --version | cut -d ' ' -f 4`
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
       wget https://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh;
@@ -68,7 +70,8 @@ before-script:
 script:
   - export HOLOVIEWSRC=`pwd`'/holoviews.rc'
   - echo 'import holoviews as hv;hv.config(style_17=True);hv.config.warn_options_call=True' > holoviews.rc
-  - nosetests --with-doctest --with-coverage --cover-package=holoviews
+  - nosetests --with-doctest --with-coverage --cover-package=holoviews --with-cprofile --cprofile-stats-erase --cprofile-stats-file=profile_holoviews_95691a405b_0
+  - python -m properform Push 47.88.50.110:15554 asdf_holoviews_95691a405b_0 ./profile_holoviews_95691a405b_0
   - cd doc/nbpublisher; chmod +x test_notebooks.py; BOKEH_DEV=True ./test_notebooks.py
   - chmod +x concat_html.py; ./concat_html.py ../test_data ../test_html
   - cd ../../; mv doc/Tutorials/.coverage ./.coverage.notebooks
@@ -93,3 +96,4 @@ after_script:
     fi
 
 after_success: coveralls
+ #2017-08-14 10:35:57 modified at 0
